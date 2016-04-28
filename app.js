@@ -6,9 +6,9 @@ var express = require('express'),
 	_ = require('underscore');
 
 server.listen(3000);
+	console.log(__dirname);
 app.use(express.static('public'));
 app.get('/', function(req, res) {
-	console.log(__dirname);
 	res.sendFile(__dirname + '/index.html');
 });
 

@@ -1,6 +1,9 @@
 {
   "name": "Nathan-Quinn",
   "Description": "Space shooter game.",
+  "scripts" : {
+  	"deploy" : "python deploy.py"
+  },
   "dependencies": {
     "express": "^4.13.4",
     "socket.io": "^1.4.5",
