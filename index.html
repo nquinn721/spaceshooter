@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Space Fighter</title>
+	<style>
+	canvas{
+		border:1px solid black;
+	}
+	</style>
+	<script src="js/jquery-2.2.3.min.js"></script>
+</head>
+<body>
+<canvas id="space-fighter" width="400" height="400"></canvas>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+var io = io.connect(),
+	canvas = document.getElementById('space-fighter'),
+	ctx = canvas.getContext('2d');
+
+var items = [];
+
+io.on('items', function(itemList) {
+	console.log(itemList);
+	items = itemList;
+});
+io.on('moved', function(item) {
+	for(var i = 0; i < items.length; i++)
+		if(items[i].id === item.id)items[i] = item;
+});
+
+$(document).on('keydown', function (e) {
+	var k = e.keyCode;
+
+	if(k === 38)
+		io.emit('move', 'up');
+	if(k === 40)
+		io.emit('move', 'down');
+	if(k === 37)
+		io.emit('move', 'left');
+	if(k === 39)
+		io.emit('move', 'right');
+	if(k === 32)
+		io.emit('shoot');
+}).on('keyup', function() {
+	io.emit('stopmove');
+});
+
+function draw() {
+	ctx.clearRect(0,0,canvas.width,canvas.height);
+	for(var i = 0; i < items.length; i++)
+		ctx.fillRect(items[i].coords.x, items[i].coords.y, items[i].coords.w, items[i].coords.h);
+
+
+	ctx.beginPath();
+	ctx.moveTo(200,0);
+	ctx.lineTo(200,400);
+	ctx.moveTo(0, 200);
+	ctx.lineTo(400, 200);
+	ctx.stroke();
+	requestAnimationFrame(draw);
+}
+draw();
+
+
+
+</script>
+
+</body>
+</html>
