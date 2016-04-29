@@ -4,22 +4,16 @@ function Player(socket, grid, x, y) {
 	this.id = socket.id;
 	this.socket = socket;
 	this.grid = grid;
-	this.coords = {
-		x : x, 
-		y : y,
-		w : 10,
-		h : 10
-	};
-	this.speed = 1;
+	this.speed = 2;
 	this.frame = 0;
 	this.type = 'player';
 	this.bullets = [];
 	this.frames = 0;
 	this.facingDir = 'right';
+	this.item = grid.createItem(this, x, y, 10, 10);
 }
 
 Player.prototype = {
-
 	shoot : function() {
 		var bullet = new Bullet(this.id, this.bullets.length, this.grid, this.gridNum, this.coords, this.facingDir);
 		bullet.init();
@@ -51,33 +45,22 @@ Player.prototype = {
 		}
 	},
 	updateGridLocation : function() {
-		var gridNum = this.getGrid();
+		var gridCoords = this.item.getSegmentCoords(this.coords);
 
-		if(gridNum === this.gridNum)return;
+		if(gridCoords === this.gridCoords)return;
 		this.frame++;
 
-		if(this.gridNum !== undefined)
+		if(this.gridCoords !== undefined)
 			this.grid.removeItem(this);
 
-		this.gridName = 'grid' + gridNum;
-		this.gridNum = gridNum;
+		this.gridCoords = gridCoords;
+		this.gridName = 'grid-' + gridCoords.join('-');
+		console.log(this.gridName);
 
 		this.socket.join(this.gridName);
 		this.grid.addItem(this);
 	},
-	getGrid : function() {
-		var num;
-		if(this.coords.x < 200 && this.coords.y < 200)
-			num = 0;
-		if(this.coords.x > 200 && this.coords.y < 200)
-			num = 1;
-		if(this.coords.x < 200 && this.coords.y > 200)
-			num = 2;
-		if(this.coords.x > 200 && this.coords.y > 200)
-			num = 3;
-
-		return num;
-	},
+	
 	client : function() {
 		return {
 			id : this.id,

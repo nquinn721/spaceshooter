@@ -8,6 +8,7 @@ var express = require('express'),
 server.listen(3000);
 	console.log(__dirname);
 app.use(express.static('public'));
+
 app.get('/', function(req, res) {
 	res.sendFile(__dirname + '/index.html');
 });
@@ -16,37 +17,38 @@ app.get('/', function(req, res) {
 
 //Lib
 var Player = require('./player'),
-	config = require('./config'),
-	grid = require('./grid')(io);
+	grid = require('./lib/grid');
 
 var players = [];
-
 io.on('connection', function(socket) {
 	console.log("Socket connected", socket.id);
 
-	// Create player and add to collection
-	socket.player = new Player(
-		socket,
-		grid,
-		Math.random() * 400,
-		Math.random() * 400
-	);
-	players.push(socket.player);
-	socket.player.updateGridLocation();
+	// socket.emit('canvas', config.gridSize, config.sectionSize);
+	// socket.emit('grid', grid.gridSegments);
 
-	socket.on('move', function(dir) {
-		socket.player.move(dir);
-	});
-	socket.on('stopmove', function() {
-		socket.player.stopmove();
-	});
-	socket.on('shoot', function() {
-		socket.player.shoot();
-	});
+	// // Create player and add to collection
+	// socket.player = new Player(
+	// 	socket,
+	// 	grid,
+	// 	Math.random() * 400,
+	// 	Math.random() * 400
+	// );
+	// players.push(socket.player);
+	// socket.player.updateGridLocation();
 
-	socket.on('disconnect', function() {
-		grid.removeItem(socket.player);
-	});
+	// socket.on('move', function(dir) {
+	// 	socket.player.move(dir);
+	// });
+	// socket.on('stopmove', function() {
+	// 	socket.player.stopmove();
+	// });
+	// socket.on('shoot', function() {
+	// 	socket.player.shoot();
+	// });
+
+	// socket.on('disconnect', function() {
+	// 	grid.removeItem(socket.player);
+	// });
 })
 
 setInterval(function() {

@@ -16,12 +16,24 @@
 <script>
 var io = io.connect(),
 	canvas = document.getElementById('space-fighter'),
-	ctx = canvas.getContext('2d');
+	ctx = canvas.getContext('2d'),
+	segment, segments;
+
+io.on('canvas', function(gridSize, segmentSize) {
+	canvas.width = gridSize.width;
+	canvas.height = gridSize.height;
+	segment = segmentSize;
+	// console.log(gridSize, segmentSize);
+});
+io.on('grid', function(seg) {
+	segments = seg;
+	console.log(segments);
+});
+
 
 var items = [];
 
 io.on('items', function(itemList) {
-	console.log(itemList);
 	items = itemList;
 });
 io.on('moved', function(item) {
@@ -45,19 +57,20 @@ $(document).on('keydown', function (e) {
 }).on('keyup', function() {
 	io.emit('stopmove');
 });
-
+var drawn;
 function draw() {
 	ctx.clearRect(0,0,canvas.width,canvas.height);
 	for(var i = 0; i < items.length; i++)
 		ctx.fillRect(items[i].coords.x, items[i].coords.y, items[i].coords.w, items[i].coords.h);
 
-
-	ctx.beginPath();
-	ctx.moveTo(200,0);
-	ctx.lineTo(200,400);
-	ctx.moveTo(0, 200);
-	ctx.lineTo(400, 200);
-	ctx.stroke();
+	if(segments){
+		for(var i = 0; i < segments.length; i++){
+			ctx.rect(segments[i].x, segments[i].y, segments[i].w, segments[i].h);
+			ctx.fillText(i,segments[i].x + (segments[i].w / 2),segments[i].y + (segments[i].h / 2));
+		}
+			ctx.stroke();
+	}
+	
 	requestAnimationFrame(draw);
 }
 draw();
