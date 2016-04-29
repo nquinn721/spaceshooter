@@ -6,9 +6,9 @@ var expect = require('chai').expect;
 
 
 describe('Item Class', function() {
-	var item1 = {x : 110, y : 110, w : 10, h : 10, type : 'player', speed : 10},
-		item2 = {x : 420, y : 330, w : 10, h : 10, type : 'player', speed : 10},
-		item3 = {x : 110, y : 115, w : 10, h : 10, type : 'player', speed : 10};
+	var item1 = {x : 110, y : 110, w : 10, h : 10, gridType : '3x3', speed : 10},
+		item2 = {x : 420, y : 330, w : 10, h : 10, gridType : '3x3', speed : 10},
+		item3 = {x : 110, y : 115, w : 10, h : 10, gridType : '3x3', speed : 10};
 		item1 = grid.createItem(item1);
 		item2 = grid.createItem(item2);
 		item3 = grid.createItem(item3);
