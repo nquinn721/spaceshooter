@@ -7,7 +7,7 @@ var express = require('express'),
 
 server.listen(3000);
 	console.log(__dirname);
-app.use(express.static('public'));
+app.use(express.static(__dirname + '/public'));
 
 app.get('/', function(req, res) {
 	res.sendFile(__dirname + '/index.html');
