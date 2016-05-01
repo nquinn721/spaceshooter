@@ -7,17 +7,28 @@
 	canvas{
 		border:1px solid black;
 	}
+	canvas, .connected{
+		float: left;
+	}
 	</style>
 	<script src="js/jquery-2.2.3.min.js"></script>
 </head>
 <body>
 <canvas id="space-fighter" width="400" height="400"></canvas>
+<div class="connected">
+	<h3>Connected Sockets</h3>
+	<div class="sockets"></div>
+	<h3>Visible Players</h3>
+	<div class="visible-sockets">
+		
+	</div>
+</div>
 <script src="/socket.io/socket.io.js"></script>
 <script>
 var io = io.connect(),
 	canvas = document.getElementById('space-fighter'),
 	ctx = canvas.getContext('2d'),
-	segment, segments;
+	segment, segments, subscribed;
 
 io.on('canvas', function(gridSize, segmentSize) {
 	canvas.width = gridSize.width;
@@ -30,21 +41,41 @@ io.on('grid', function(seg) {
 
 
 var items = [];
+var connected;
 
 io.on('items', function(itemList) {
 	items = itemList;
+	showVisible();
 });
 io.on('remove item', function(item) {
 	removeItem(item);
+	showVisible();
 });
 io.on('add item', function(item) {
-	console.log('add', item);
 	items.push(item);
+	showVisible();
 });
 io.on('moved', function(item) {
-	console.log('moved', item.x, item.y, item.w, item.h, item.id, items);
 	replaceItem(item);
 });
+io.on('connected sockets', function(sockets) {
+	connected = sockets;
+	showConnected();
+});
+io.on('subscribed segments', function(segments) {
+	subscribed = segments;
+});
+
+function showVisible() {
+	$('.visible-sockets').html('');
+	for(var i = 0; i < items.length; i++)
+		$('.visible-sockets').append($('<div>', {text : items[i].id}));
+}
+function showConnected() {
+	$('.sockets').html('');
+	for(var i = 0; i < connected.length; i++)
+		$('.sockets').append($('<div>', {text : connected[i].id}));
+}
 function getItem(item) {
 	for(var i = 0; i < items.length; i++)
 		if(items[i].id === item.id)return item;
@@ -99,6 +130,13 @@ function draw() {
 			ctx.fillText('[' + (y / 100) + ',' + (x / 100) + ']',x + (w / 2) - 15,y + (h / 2));
 		}
 			ctx.stroke();
+	}
+
+	if(subscribed){
+		ctx.fillStyle = 'rgba(243, 177, 255, 0.72)';
+		for(var i = 0; i < subscribed.length; i++){
+			ctx.fillRect(subscribed[i].x, subscribed[i].y, subscribed[i].w, subscribed[i].h);
+		}
 	}
 	
 	requestAnimationFrame(draw);

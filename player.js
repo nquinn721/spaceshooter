@@ -21,11 +21,10 @@ function Player(socket, grid, x, y) {
 Player.prototype = {
 	init : function(io) {
 		var self = this;
-		this.updateGridLocation(io);
+		this.emitSegmentArea(io);
 		this.item.subscribeToArea();
+		this.socket.emit('subscribed segments', this.item.getSubscribedSegments());
 
-		// this.grid.subscribeSegmentArea(this.item.getSegment(), 
-									  // this.item.segmentArea, this.id, this.areaSegmentOnChange.bind(this));
 	},
 	shoot : function() {
 		var bullet = new Bullet(this.id, this.bullets.length, this.grid, this.gridNum, this.coords, this.facingDir);
@@ -34,6 +33,7 @@ Player.prototype = {
 	},
 	areaSegmentOnChange : function(event, item, segment) {
 		this.socket.emit(event, item.client());
+		this.socket.emit('subscribed segments', this.item.getSubscribedSegments());
 	},
 	tick : function(io) {
 		this.frames++;
@@ -58,11 +58,12 @@ Player.prototype = {
 			this.item.move(this);
 			this.updateGridLocation(io);
 			// io.in(this.gridName).emit('moved', this.item.client());
+			this.emitSegmentArea(io);
 		}
 		if(this.udpatedSegment){
 			this.udpatedSegment = false;
 			// this.emitToRoom(io);
-			this.emitSegmentArea(io);
+			// this.emitSegmentArea(io);
 		}
 	},
 	updateGridLocation : function(io) {
@@ -74,7 +75,7 @@ Player.prototype = {
 
 		if(!this.gridCoords)this.gridCoords = gridCoords;
 
-		this.emitToRoom(io);
+		// this.emitToRoom(io);
 		this.socket.leave(this.gridName);
 		this.gridCoords = gridCoords;
 		this.gridName = 'grid-' + gridCoords.join('-');

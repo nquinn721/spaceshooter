@@ -22,6 +22,8 @@ var Player = require('./player'),
 	grid = requirejs('grid')(config);
 
 var players = [];
+var clientPlayers = [];
+
 io.on('connection', function(socket) {
 	console.log("Socket connected", socket.id);
 
@@ -37,6 +39,8 @@ io.on('connection', function(socket) {
 	);
 	players.push(socket.player);
 	socket.player.init(io);
+	clientPlayers.push(socket.player.item.client());
+	io.emit('connected sockets', clientPlayers);
 
 	socket.on('move', function(dir) {
 		socket.player.move(dir);
@@ -44,6 +48,7 @@ io.on('connection', function(socket) {
 	socket.on('stopmove', function() {
 		socket.player.stopmove();
 	});
+
 	// socket.on('shoot', function() {
 	// 	socket.player.shoot();
 	// });
