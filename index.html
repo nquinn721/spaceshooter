@@ -23,11 +23,9 @@ io.on('canvas', function(gridSize, segmentSize) {
 	canvas.width = gridSize.width;
 	canvas.height = gridSize.height;
 	segment = segmentSize;
-	// console.log(gridSize, segmentSize);
 });
 io.on('grid', function(seg) {
 	segments = seg;
-	console.log(segments);
 });
 
 
@@ -36,11 +34,34 @@ var items = [];
 io.on('items', function(itemList) {
 	items = itemList;
 });
-io.on('moved', function(item) {
-	for(var i = 0; i < items.length; i++)
-		if(items[i].id === item.id)items[i] = item;
+io.on('remove item', function(item) {
+	removeItem(item);
 });
-
+io.on('add item', function(item) {
+	console.log('add', item);
+	items.push(item);
+});
+io.on('moved', function(item) {
+	console.log('moved', item.x, item.y, item.w, item.h, item.id, items);
+	replaceItem(item);
+});
+function getItem(item) {
+	for(var i = 0; i < items.length; i++)
+		if(items[i].id === item.id)return item;
+}
+function replaceItem(item) {
+	var found;
+	for(var i = 0; i < items.length; i++)
+		if(items[i].id === item.id){
+			found = true;
+			items[i] = item;
+		}
+	if(!found)items.push(item);
+}
+function removeItem(item) {
+	for(var i = 0; i < items.length; i++)
+		if(items[i].id === item.id)items.splice(i,1);
+}
 $(document).on('keydown', function (e) {
 	var k = e.keyCode;
 
@@ -60,13 +81,22 @@ $(document).on('keydown', function (e) {
 var drawn;
 function draw() {
 	ctx.clearRect(0,0,canvas.width,canvas.height);
-	for(var i = 0; i < items.length; i++)
-		ctx.fillRect(items[i].coords.x, items[i].coords.y, items[i].coords.w, items[i].coords.h);
+	for(var i = 0; i < items.length; i++){
+		ctx.fillStyle = "black"; 
+		ctx.fillRect(items[i].x, items[i].y, items[i].w, items[i].h);
+	}
+	ctx.fillStyle = '#aaa';
 
 	if(segments){
 		for(var i = 0; i < segments.length; i++){
-			ctx.rect(segments[i].x, segments[i].y, segments[i].w, segments[i].h);
-			ctx.fillText(i,segments[i].x + (segments[i].w / 2),segments[i].y + (segments[i].h / 2));
+			var x = segments[i].x,
+				y = segments[i].y,
+				w = segments[i].w,
+				h = segments[i].h;
+
+			ctx.rect(x, y, w, h);
+			ctx.fillStyle = "#aaa"; 
+			ctx.fillText('[' + (y / 100) + ',' + (x / 100) + ']',x + (w / 2) - 15,y + (h / 2));
 		}
 			ctx.stroke();
 	}
