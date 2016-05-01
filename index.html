@@ -10,10 +10,18 @@
 	canvas, .connected{
 		float: left;
 	}
+	.connected {
+	    position: fixed;
+	    right: 0;
+	    background: #222;
+	    color: white;
+	    padding: 0 20px;
+	}
 	</style>
 	<script src="js/jquery-2.2.3.min.js"></script>
 </head>
 <body>
+<canvas id="actual-game" width="300" height="300"></canvas>
 <canvas id="space-fighter" width="400" height="400"></canvas>
 <div class="connected">
 	<h3>Connected Sockets</h3>
@@ -28,11 +36,13 @@
 var io = io.connect(),
 	canvas = document.getElementById('space-fighter'),
 	ctx = canvas.getContext('2d'),
+	gameCanvas = document.getElementById('actual-game'),
+	gameCtx = gameCanvas.getContext('2d'),
 	segment, segments, subscribed;
 
 io.on('canvas', function(gridSize, segmentSize) {
-	canvas.width = gridSize.width;
-	canvas.height = gridSize.height;
+	canvas.width = gridSize.width / 2;
+	canvas.height = gridSize.height / 2;
 	segment = segmentSize;
 });
 io.on('grid', function(seg) {
@@ -41,8 +51,12 @@ io.on('grid', function(seg) {
 
 
 var items = [];
+var player;
 var connected;
 
+io.on('player', function(p) {
+	player = p;
+});
 io.on('items', function(itemList) {
 	items = itemList;
 	showVisible();
@@ -56,6 +70,8 @@ io.on('add item', function(item) {
 	showVisible();
 });
 io.on('moved', function(item) {
+	if(item.id === player.id)
+		player = item;
 	replaceItem(item);
 });
 io.on('connected sockets', function(sockets) {
@@ -110,39 +126,104 @@ $(document).on('keydown', function (e) {
 	io.emit('stopmove');
 });
 var drawn;
+var logged;
+var loggedSubscribed;
 function draw() {
 	ctx.clearRect(0,0,canvas.width,canvas.height);
+	gameCtx.clearRect(0,0,gameCanvas.width,gameCanvas.height);
+
+	if(player){
+		gameCtx.save();
+		gameCtx.translate(-player.x + 150, -player.y + 150);
+		for(var i = 0; i < items.length; i++)
+			if(items[i].id !== player.id)
+				gameCtx.fillRect(items[i].x, items[i].y, items[i].w, items[i].h);
+		gameCtx.restore();
+		gameCtx.fillRect(150, 150, player.w, player.h);
+	}
+
+
+
+
 	for(var i = 0; i < items.length; i++){
 		ctx.fillStyle = "black"; 
-		ctx.fillRect(items[i].x, items[i].y, items[i].w, items[i].h);
+		ctx.fillRect(
+			items[i].x / 2, 
+			items[i].y / 2, 
+			items[i].w / 2, 
+			items[i].h / 2
+		);
 	}
-	ctx.fillStyle = '#aaa';
+	// ctx.fillStyle = '#aaa';
 
-	if(segments){
-		for(var i = 0; i < segments.length; i++){
-			var x = segments[i].x,
-				y = segments[i].y,
-				w = segments[i].w,
-				h = segments[i].h;
+	// gameCtx.fillStyle = 'black';
 
-			ctx.rect(x, y, w, h);
-			ctx.fillStyle = "#aaa"; 
-			ctx.fillText('[' + (y / 100) + ',' + (x / 100) + ']',x + (w / 2) - 15,y + (h / 2));
-		}
-			ctx.stroke();
-	}
+	
+		
+	// if(segments){
+	// 	for(var i = 0; i < segments.length; i++){
+	// 		var x = segments[i].x,
+	// 			y = segments[i].y,
+	// 			w = segments[i].w,
+	// 			h = segments[i].h;
+
+	// 		ctx.rect(x, y, w, h);
+	// 		ctx.fillStyle = "#aaa"; 
+	// 		ctx.fillText('[' + (y / 100) + ',' + (x / 100) + ']',x + (w / 2) - 15,y + (h / 2));
+	// 	}
+	// 		ctx.stroke();
+	// }
 
 	if(subscribed){
+		if(!loggedSubscribed){
+			console.log(subscribed);
+			loggedSubscribed = true;
+		}
 		ctx.fillStyle = 'rgba(243, 177, 255, 0.72)';
 		for(var i = 0; i < subscribed.length; i++){
-			ctx.fillRect(subscribed[i].x, subscribed[i].y, subscribed[i].w, subscribed[i].h);
+			ctx.fillRect(subscribed[i].x  / 2, subscribed[i].y  / 2, subscribed[i].w / 2, subscribed[i].h / 2);
 		}
+		// drawSubscribed();
 	}
 	
 	requestAnimationFrame(draw);
 }
 draw();
 
+
+function drawSubscribed() {
+	var s = subscribed[0],
+		h = s.h / 2,
+		w = s.w / 2,
+		zero = subscribed[0],
+		one = subscribed[1],
+		two = subscribed[2],
+		three = subscribed[3],
+		four = subscribed[4],
+		five = subscribed[5],
+		six = subscribed[6],
+		seven = subscribed[7],
+		eight = subscribed[8];
+
+	if(zero)
+		ctx.fillRect(zero.x + w, zero.y + h, w, h);
+	if(one)
+		ctx.fillRect(one.x , one.y + h, w, h);
+	if(two)
+		ctx.fillRect(two.x - w, two.y + h, w, h);
+	if(three)
+		ctx.fillRect(three.x + w, three.y, w, h);
+	if(four)
+		ctx.fillRect(four.x, four.y, w, h);
+	if(five)
+		ctx.fillRect(five.x - w, five.y, w, h);
+	if(six)
+		ctx.fillRect(six.x + w, six.y - h, w, h);
+	if(seven)
+		ctx.fillRect(seven.x, seven.y - h, w, h);
+	if(eight)
+		ctx.fillRect(eight.x - w, eight.y - h, w, h);
+}
 
 
 </script>
