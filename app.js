@@ -47,9 +47,9 @@ for(var i = 0; i < config.gridSize.width; i += config.segmentSize.width){
 }
 
 
-for(var i = 0; i < 30000; i++){
+for(var i = 0; i < 100000; i++){
 	var npc = new NPC(grid, Math.random() * config.gridSize.width, Math.random() * config.gridSize.height, 10, 10, i);
-	minimap.push(npc.item.client());
+	// minimap.push(npc.item.client());
 }
 io.on('connection', function(socket) {
 	console.log("Socket connected", socket.id);
@@ -71,7 +71,7 @@ io.on('connection', function(socket) {
 	// socket.emit('add item', wall.item.client());
 	clientPlayers.push(socket.player.item.client());
 	io.emit('connected sockets', clientPlayers);
-	io.emit('minimap', minimap);
+	// io.emit('minimap', minimap);
 
 	socket.on('move', function(dir) {
 		socket.player.move(dir);

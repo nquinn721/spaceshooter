@@ -26,24 +26,32 @@
 	}
 	#space-fighter{
 		position: fixed;
-		bottom: 0;
-		right: 0;
+		bottom: 10px;
+		right: 10px;
+	}
+	.none{
+		display: none;
 	}
 	</style>
 	<script src="js/jquery-2.2.3.min.js"></script>
 </head>
 <body>
+<img src="img/stars2.jpg" alt="" id="background" class="none">
+<img src="img/player.png" alt="" id="player" class="none">
+<img src="img/enemy.png" alt="" id="enemy" class="none">
 <canvas id="actual-game" width="900" height="900"></canvas>
+<!-- <canvas id="c" width="900" height="900"></canvas> -->
 <canvas id="space-fighter" width="400" height="400"></canvas>
 <div class="connected">
 	<h3>Connected Sockets</h3>
 	<div class="sockets"></div>
-	<h3>Visible Players</h3>
+	<h3>Visible Players <span class="total"></span></h3>
 	<div class="visible-sockets">
 		
 	</div>
 </div>
 <script src="/socket.io/socket.io.js"></script>
+<script src="/js/particle.js"></script>
 <script>
 var io = io.connect(),
 	canvas = document.getElementById('space-fighter'),
@@ -54,10 +62,11 @@ var io = io.connect(),
 
 var items = [],
 	miniMapSizeW, miniMapSizeH, segments, subscribed, 
-	player, minimap, connected, playerCoords;
+	player, minimap, connected, grid;
 
 	
 io.on('canvas', function(gridSize, segmentSize) {
+	grid = gridSize;
 	miniMapSizeW = (gridSize.width / segmentSize.width) * 3;
 	miniMapSizeH = (gridSize.height / segmentSize.height) * 3;
 	canvas.width = gridSize.width / miniMapSizeW;
@@ -74,9 +83,9 @@ io.on('grid', function(seg) {
 io.on('player', function(p) {
 	player = p;
 });
-io.on('minimap', function(items) {
-	minimap = items;
-});
+// io.on('minimap', function(items) {
+// 	minimap = items;
+// });
 io.on('items', function(itemList) {
 	items = itemList;
 	showVisible();
@@ -104,6 +113,7 @@ io.on('subscribed segments', function(segments) {
 
 function showVisible() {
 	$('.visible-sockets').html('');
+	$('.total').text(items.length);
 	for(var i = 0; i < items.length; i++)
 		$('.visible-sockets').append($('<div>', {text : items[i].id}));
 }
@@ -129,17 +139,30 @@ function removeItem(item) {
 	for(var i = 0; i < items.length; i++)
 		if(items[i].id === item.id)items.splice(i,1);
 }
+var playerRotation;
 $(document).on('keydown', function (e) {
 	var k = e.keyCode;
 
-	if(k === 38)
+	if(k === 38){
 		io.emit('move', 'up');
-	if(k === 40)
+		playerRotation = -90;
+	}
+	
+	if(k === 40){
 		io.emit('move', 'down');
-	if(k === 37)
+		playerRotation = 90;	
+	}
+	
+	if(k === 37){
 		io.emit('move', 'left');
-	if(k === 39)
+		playerRotation = -180;
+	}
+	
+	if(k === 39){
 		io.emit('move', 'right');
+		playerRotation = 0;
+	}
+	
 	if(k === 32)
 		io.emit('shoot');
 }).on('keyup', function() {
@@ -148,28 +171,53 @@ $(document).on('keydown', function (e) {
 var drawn;
 var logged;
 var loggedSubscribed;
+	
 function draw() {
 	ctx.clearRect(0,0,canvas.width,canvas.height);
 	gameCtx.clearRect(0,0,gameCanvas.width,gameCanvas.height);
-
 	drawGame();
 	drawMiniMap();
 	drawSubscribed();
-	
 	requestAnimationFrame(draw);
 }
 draw();
+var img = document.getElementById('background');
+var playerimg = document.getElementById('player');
+var enemyimg = document.getElementById('enemy');
 
 function drawGame() {
+	ctx.fillStyle = 'red';
 	if(player){
 		gameCtx.save();
 		gameCtx.translate(-player.x + (gameCanvas.width / 2), -player.y + (gameCanvas.height / 2));
+		drawBackground();
 		for(var i = 0; i < items.length; i++)
-			if(items[i].id !== player.id)
-				gameCtx.fillRect(items[i].x, items[i].y, items[i].w, items[i].h);
+			if(items[i].id !== player.id){
+				if(items[i].id && items[i].id.match('npc'))
+					gameCtx.drawImage(enemyimg, items[i].x, items[i].y, 50, 30);
+				else
+					gameCtx.fillRect(items[i].x, items[i].y, items[i].w, items[i].h);
+			}
 		gameCtx.restore();
-		gameCtx.fillRect(gameCanvas.width / 2, gameCanvas.height / 2, player.w, player.h);
+		drawRotatedImage(playerimg, gameCanvas.width / 2, gameCanvas.height / 2, playerRotation);
+		// gameCtx.fillRect(gameCanvas.width / 2, gameCanvas.height / 2, player.w, player.h);
 	}
+}
+var TO_RADIANS = Math.PI/180; 
+function drawRotatedImage(image, x, y, angle) { 
+	gameCtx.save(); 
+	gameCtx.translate(x, y);
+	gameCtx.rotate(angle * TO_RADIANS);
+	gameCtx.drawImage(image, -(image.width/2 - 70), -(image.height/2 - 40), 140, 80);
+	gameCtx.restore(); 
+}
+function drawBackground() {
+	gameCtx.save();
+	var pat = gameCtx.createPattern(img,"repeat");
+	gameCtx.rect( 0, 0, grid.width, grid.height);
+	gameCtx.fillStyle = pat;
+	gameCtx.fill();
+	gameCtx.restore();
 }
 
 function drawMiniMap() {
@@ -196,6 +244,7 @@ function drawMiniMap() {
 				
 			}
 		}
+		
 		ctx.fillRect(
 			player.x / miniMapSizeW, 
 			player.y / miniMapSizeH, 
@@ -203,20 +252,20 @@ function drawMiniMap() {
 			player.h / 3
 		);
 
-		// if(segments){
-		// 	ctx.fillStyle = "#aaa"; 
-		// 	ctx.strokeStyle = "#aaa"; 
-		// 	for(var i = 0; i < segments.length; i++){
-		// 		var x = segments[i].x / miniMapSizeW,
-		// 			y = segments[i].y / miniMapSizeH,
-		// 			w = segments[i].w / miniMapSizeW,
-		// 			h = segments[i].h / miniMapSizeH;
+	// 	// if(segments){
+	// 	// 	ctx.fillStyle = "#aaa"; 
+	// 	// 	ctx.strokeStyle = "#aaa"; 
+	// 	// 	for(var i = 0; i < segments.length; i++){
+	// 	// 		var x = segments[i].x / miniMapSizeW,
+	// 	// 			y = segments[i].y / miniMapSizeH,
+	// 	// 			w = segments[i].w / miniMapSizeW,
+	// 	// 			h = segments[i].h / miniMapSizeH;
 
-		// 		ctx.rect(x, y, w, h);
-		// 		ctx.fillText('[' + (y / h) + ',' + (x / w) + ']',x + (w / 2) - 15,y + (h / 2));
-		// 	}
-		// 	ctx.stroke();
-		// }
+	// 	// 		ctx.rect(x, y, w, h);
+	// 	// 		ctx.fillText('[' + (y / h) + ',' + (x / w) + ']',x + (w / 2) - 15,y + (h / 2));
+	// 	// 	}
+	// 	// 	ctx.stroke();
+	// 	// }
 
 	}
 }
@@ -226,7 +275,7 @@ function drawSubscribed() {
 			console.log(subscribed);
 			loggedSubscribed = true;
 		}
-		ctx.fillStyle = 'rgba(243, 177, 255, 0.72)';
+		// ctx.fillStyle = 'rgba(243, 177, 255, 0.72)';
 		for(var i = 0; i < subscribed.length; i++){
 			ctx.fillRect(
 				subscribed[i].x / miniMapSizeW, 
@@ -237,6 +286,9 @@ function drawSubscribed() {
 		}
 	}
 }
+
+
+window.requestAnimFrame=function(){return window.requestAnimationFrame||window.webkitRequestAnimationFrame||window.mozRequestAnimationFrame||window.oRequestAnimationFrame||window.msRequestAnimationFrame||function(a){window.setTimeout(a,1E3/60)}}();
 </script>
 
 </body>
