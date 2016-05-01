@@ -3,10 +3,12 @@ var express = require('express'),
 	server = require('http').Server(app),
 	io = require('socket.io')(server),
 	util = require('util'),
+	port = 3000,
 	_ = require('underscore');
 
-server.listen(3000);
-	console.log(__dirname);
+server.listen(port, function() {
+	console.log('Listening on port', port);
+});
 app.use(express.static(__dirname + '/public'));
 
 app.get('/', function(req, res) {
