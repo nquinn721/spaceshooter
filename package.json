@@ -1,6 +1,8 @@
 {
   "name": "Nathan-Quinn",
   "Description": "Space shooter game.",
+  "app-type" : "node",
+  "port" : "3000",
   "scripts": {
     "deploy": "python deploy.py",
     "test": "mocha --recursive"
