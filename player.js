@@ -4,12 +4,12 @@ function Player(socket, grid, x, y) {
 	this.id = socket.id;
 	this.socket = socket;
 	this.grid = grid;
-	this.speed = 2;
+	this.speed = 10;
 	this.frame = 0;
 	this.x = x;
 	this.y = y;
-	this.w = 10;
-	this.h = 10;
+	this.w = 20;
+	this.h = 20;
 	this.type = 'player';
 	this.segmentAreaType = '3x3';
 	this.bullets = [];
@@ -24,7 +24,7 @@ Player.prototype = {
 		this.emitSegmentArea(io);
 		this.item.subscribeToArea();
 		this.socket.emit('subscribed segments', this.item.getSubscribedSegments());
-
+		this.updateGridLocation();
 	},
 	shoot : function() {
 		var bullet = new Bullet(this.id, this.bullets.length, this.grid, this.gridNum, this.coords, this.facingDir);
@@ -56,31 +56,15 @@ Player.prototype = {
 		// this.bullets = _.reject(this.bullets, function(bullet){ return bullet.destroyed; });
 		if(this.movedir){
 			this.item.move(this);
-			this.updateGridLocation(io);
-			// io.in(this.gridName).emit('moved', this.item.client());
+			this.updateGridLocation();
 			this.emitSegmentArea(io);
 		}
-		if(this.udpatedSegment){
-			this.udpatedSegment = false;
-			// this.emitToRoom(io);
-			// this.emitSegmentArea(io);
-		}
 	},
-	updateGridLocation : function(io) {
+	updateGridLocation : function() {
 		var gridCoords = this.item.getCurrentSegmentCoords();
 
-		if(this.gridCoords && this.gridCoords[0] === gridCoords[0] && this.gridCoords[1] === gridCoords[1]){
-			return;
-		}
-
-		if(!this.gridCoords)this.gridCoords = gridCoords;
-
-		// this.emitToRoom(io);
-		this.socket.leave(this.gridName);
 		this.gridCoords = gridCoords;
-		this.gridName = 'grid-' + gridCoords.join('-');
-		this.socket.join(this.gridName);
-		this.udpatedSegment = true;
+		this.socket.emit('player coords', gridCoords);
 	},
 	emitToRoom : function(io) {
 		var segment = this.grid.getSegment(this.gridCoords[0], this.gridCoords[1]);

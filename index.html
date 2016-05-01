@@ -4,8 +4,13 @@
 	<meta charset="UTF-8">
 	<title>Space Fighter</title>
 	<style>
+	html, body{
+		margin: 0;
+		padding: 0;
+	}
 	canvas{
-		border:1px solid black;
+		border:2px solid black;
+		box-sizing: border-box;
 	}
 	canvas, .connected{
 		float: left;
@@ -15,13 +20,18 @@
 	    right: 0;
 	    background: #222;
 	    color: white;
-	    padding: 0 20px;
+	    padding: 0 20px 20px 20px;
+	}
+	#space-fighter{
+		position: fixed;
+		bottom: 0;
+		right: 0;
 	}
 	</style>
 	<script src="js/jquery-2.2.3.min.js"></script>
 </head>
 <body>
-<canvas id="actual-game" width="300" height="300"></canvas>
+<canvas id="actual-game" width="900" height="900"></canvas>
 <canvas id="space-fighter" width="400" height="400"></canvas>
 <div class="connected">
 	<h3>Connected Sockets</h3>
@@ -37,25 +47,33 @@ var io = io.connect(),
 	canvas = document.getElementById('space-fighter'),
 	ctx = canvas.getContext('2d'),
 	gameCanvas = document.getElementById('actual-game'),
-	gameCtx = gameCanvas.getContext('2d'),
-	segment, segments, subscribed;
+	gameCtx = gameCanvas.getContext('2d');
 
+
+var items = [],
+	miniMapSizeW, miniMapSizeH, segments, subscribed, 
+	player, minimap, connected, playerCoords;
+
+	
 io.on('canvas', function(gridSize, segmentSize) {
-	canvas.width = gridSize.width / 2;
-	canvas.height = gridSize.height / 2;
-	segment = segmentSize;
+	miniMapSizeW = (gridSize.width / segmentSize.width) * 3;
+	miniMapSizeH = (gridSize.height / segmentSize.height) * 3;
+	canvas.width = gridSize.width / miniMapSizeW;
+	canvas.height = gridSize.height / miniMapSizeH;
+	gameCanvas.width = segmentSize.width;
+	gameCanvas.height = segmentSize.height;
 });
 io.on('grid', function(seg) {
 	segments = seg;
 });
 
 
-var items = [];
-var player;
-var connected;
 
 io.on('player', function(p) {
 	player = p;
+});
+io.on('minimap', function(items) {
+	minimap = items;
 });
 io.on('items', function(itemList) {
 	items = itemList;
@@ -132,48 +150,75 @@ function draw() {
 	ctx.clearRect(0,0,canvas.width,canvas.height);
 	gameCtx.clearRect(0,0,gameCanvas.width,gameCanvas.height);
 
+	drawGame();
+	drawMiniMap();
+	drawSubscribed();
+	
+	requestAnimationFrame(draw);
+}
+draw();
+
+function drawGame() {
 	if(player){
 		gameCtx.save();
-		gameCtx.translate(-player.x + 150, -player.y + 150);
+		gameCtx.translate(-player.x + (gameCanvas.width / 2), -player.y + (gameCanvas.height / 2));
 		for(var i = 0; i < items.length; i++)
 			if(items[i].id !== player.id)
 				gameCtx.fillRect(items[i].x, items[i].y, items[i].w, items[i].h);
 		gameCtx.restore();
-		gameCtx.fillRect(150, 150, player.w, player.h);
+		gameCtx.fillRect(gameCanvas.width / 2, gameCanvas.height / 2, player.w, player.h);
 	}
+}
 
-
-
-
-	for(var i = 0; i < items.length; i++){
-		ctx.fillStyle = "black"; 
+function drawMiniMap() {
+	ctx.fillStyle = "black"; 
+	if(minimap){
+		for(var i = 0; i < minimap.length; i++){
+			if(minimap[i].id !== player.id){
+				if(minimap[i].id && !minimap[i].id.match('npc')){
+					ctx.fillRect(
+						minimap[i].x / miniMapSizeW, 
+						minimap[i].y / miniMapSizeH, 
+						minimap[i].w / 3, 
+						minimap[i].h / 3
+					);
+					
+				}else{
+					// ctx.fillRect(
+					// 	minimap[i].x / miniMapSizeW, 
+					// 	minimap[i].y / miniMapSizeH, 
+					// 	minimap[i].w / 40, 
+					// 	minimap[i].h / 40
+					// );
+				}
+				
+			}
+		}
 		ctx.fillRect(
-			items[i].x / 2, 
-			items[i].y / 2, 
-			items[i].w / 2, 
-			items[i].h / 2
+			player.x / miniMapSizeW, 
+			player.y / miniMapSizeH, 
+			player.w / 3, 
+			player.h / 3
 		);
+
+		// if(segments){
+		// 	ctx.fillStyle = "#aaa"; 
+		// 	ctx.strokeStyle = "#aaa"; 
+		// 	for(var i = 0; i < segments.length; i++){
+		// 		var x = segments[i].x / miniMapSizeW,
+		// 			y = segments[i].y / miniMapSizeH,
+		// 			w = segments[i].w / miniMapSizeW,
+		// 			h = segments[i].h / miniMapSizeH;
+
+		// 		ctx.rect(x, y, w, h);
+		// 		ctx.fillText('[' + (y / h) + ',' + (x / w) + ']',x + (w / 2) - 15,y + (h / 2));
+		// 	}
+		// 	ctx.stroke();
+		// }
+
 	}
-	// ctx.fillStyle = '#aaa';
-
-	// gameCtx.fillStyle = 'black';
-
-	
-		
-	// if(segments){
-	// 	for(var i = 0; i < segments.length; i++){
-	// 		var x = segments[i].x,
-	// 			y = segments[i].y,
-	// 			w = segments[i].w,
-	// 			h = segments[i].h;
-
-	// 		ctx.rect(x, y, w, h);
-	// 		ctx.fillStyle = "#aaa"; 
-	// 		ctx.fillText('[' + (y / 100) + ',' + (x / 100) + ']',x + (w / 2) - 15,y + (h / 2));
-	// 	}
-	// 		ctx.stroke();
-	// }
-
+}
+function drawSubscribed() {
 	if(subscribed){
 		if(!loggedSubscribed){
 			console.log(subscribed);
@@ -181,51 +226,15 @@ function draw() {
 		}
 		ctx.fillStyle = 'rgba(243, 177, 255, 0.72)';
 		for(var i = 0; i < subscribed.length; i++){
-			ctx.fillRect(subscribed[i].x  / 2, subscribed[i].y  / 2, subscribed[i].w / 2, subscribed[i].h / 2);
+			ctx.fillRect(
+				subscribed[i].x / miniMapSizeW, 
+				subscribed[i].y / miniMapSizeH, 
+				subscribed[i].w / miniMapSizeW, 
+				subscribed[i].h / miniMapSizeH
+			);
 		}
-		// drawSubscribed();
 	}
-	
-	requestAnimationFrame(draw);
 }
-draw();
-
-
-function drawSubscribed() {
-	var s = subscribed[0],
-		h = s.h / 2,
-		w = s.w / 2,
-		zero = subscribed[0],
-		one = subscribed[1],
-		two = subscribed[2],
-		three = subscribed[3],
-		four = subscribed[4],
-		five = subscribed[5],
-		six = subscribed[6],
-		seven = subscribed[7],
-		eight = subscribed[8];
-
-	if(zero)
-		ctx.fillRect(zero.x + w, zero.y + h, w, h);
-	if(one)
-		ctx.fillRect(one.x , one.y + h, w, h);
-	if(two)
-		ctx.fillRect(two.x - w, two.y + h, w, h);
-	if(three)
-		ctx.fillRect(three.x + w, three.y, w, h);
-	if(four)
-		ctx.fillRect(four.x, four.y, w, h);
-	if(five)
-		ctx.fillRect(five.x - w, five.y, w, h);
-	if(six)
-		ctx.fillRect(six.x + w, six.y - h, w, h);
-	if(seven)
-		ctx.fillRect(seven.x, seven.y - h, w, h);
-	if(eight)
-		ctx.fillRect(eight.x - w, eight.y - h, w, h);
-}
-
-
 </script>
 
 </body>
