@@ -32,6 +32,7 @@ Player.prototype = {
 		this.bullets.push(bullet);
 	},
 	areaSegmentOnChange : function(event, item, segment) {
+		console.log(this.id, event);
 		this.socket.emit(event, item.client());
 		this.socket.emit('subscribed segments', this.item.getSubscribedSegments());
 	},
