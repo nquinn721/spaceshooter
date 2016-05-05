@@ -89,8 +89,8 @@ Player.prototype = {
 
 	draw : function () {
 		var self = this;
-		self.stage.ctx.fillStyle = 'white';
-		self.stage.ctx.fillRect(this.x, this.y, this.player.w, this.player.h);
+		// self.stage.ctx.fillStyle = 'white';
+		// self.stage.ctx.fillRect(this.x, this.y, this.player.w, this.player.h);
 		this.stage.rotate(this.angle, this.x, this.y, this.w, this.h, function (x,y,w,h) {
 			self.stage.ctx.drawImage(self.sprite, x, y,w,h);
 		});

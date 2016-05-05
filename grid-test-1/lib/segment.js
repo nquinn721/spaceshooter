@@ -29,33 +29,33 @@ define('segment', function() {
 			this.emit('moved', item);	
 		},
 		checkCollision : function(it) {
-			var item,a,b;
-			for(var i = 0, items = this.items.length; i < items; i++){
-				item = this.items[i];
-				a = it.item;
-				b = item.item;
-				if(b.id === a.id)continue;
-				if(a.x >= b.x &&
-					a.x <= b.x + b.w &&
-					a.y >= b.y &&
-					a.y <= b.y + b.h ||
-					a.x + a.w >= b.x &&
-					a.x + a.w <= b.x + b.w &&
-					a.y >= b.y &&
-					a.y <= b.y + b.h ||
-					a.x >= b.x &&
-					a.x <= b.x + b.w &&
-					a.y + a.h >= b.y &&
-					a.y + a.h <= b.y + b.h ||
-					a.x + a.w >= b.x &&
-					a.x + a.w <= b.x + b.w &&
-					a.y + a.h >= b.y &&
-					a.y + a.h <= b.y + b.h){
-					item.collide(it);
-					it.collide(item);
-					return true;
-				}
-			}
+			// var item,a,b;
+			// for(var i = 0, items = this.items.length; i < items; i++){
+			// 	item = this.items[i];
+			// 	a = it.item;
+			// 	b = item.item;
+			// 	if(b.id === a.id)continue;
+			// 	if(a.x >= b.x &&
+			// 		a.x <= b.x + b.w &&
+			// 		a.y >= b.y &&
+			// 		a.y <= b.y + b.h ||
+			// 		a.x + a.w >= b.x &&
+			// 		a.x + a.w <= b.x + b.w &&
+			// 		a.y >= b.y &&
+			// 		a.y <= b.y + b.h ||
+			// 		a.x >= b.x &&
+			// 		a.x <= b.x + b.w &&
+			// 		a.y + a.h >= b.y &&
+			// 		a.y + a.h <= b.y + b.h ||
+			// 		a.x + a.w >= b.x &&
+			// 		a.x + a.w <= b.x + b.w &&
+			// 		a.y + a.h >= b.y &&
+			// 		a.y + a.h <= b.y + b.h){
+			// 		item.collide(it);
+			// 		it.collide(item);
+			// 		return true;
+			// 	}
+			// }
 
 		},
 		subscribe : function(id, cb) {
