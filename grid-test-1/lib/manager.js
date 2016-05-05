@@ -35,6 +35,9 @@ define('manager', [
 
 				return p.client();
 			});
+		},
+		removePlayer : function(player) {
+			this.players.splice(this.players.indexOf(player), 1);
 		}
 	}
 	return function(config){

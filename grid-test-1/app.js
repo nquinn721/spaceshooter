@@ -77,6 +77,7 @@ io.on('connection', function(socket) {
 	});
 
 	socket.on('disconnect', function() {
+		manager.removePlayer(socket.player);
 	});
 })
 setInterval(function() {
