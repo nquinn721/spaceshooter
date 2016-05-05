@@ -19,6 +19,9 @@ define('item', function() {
 	}
 
 	Item.prototype = {
+		init : function () {
+			this.subscribe();
+		},
 		leftOriginalSegmentArea : function() {
 			var dims = this.grid.getSegmentAreaDimensions(this.segment, this.segmentArea);
 			if(	this.item.x <= dims.x || 
@@ -63,13 +66,23 @@ define('item', function() {
 							this.grid.getSegmentFromCoords(this.item.x, this.item.y);
 
 			if(segment && segment !== this.segment){
-				this.grid.unsubscribeSegmentArea(this.segment, this.segmentArea, this.item.id);
+				this.unsubscribe();
 				this.segment.remove(this);
 				segment.add(this);
 				this.segment = segment;
-				this.subscribeToArea();
+				this.subscribe();
 			}
 			return this.segment;
+		},
+		subscribe : function() {
+			if(this.segmentArea)
+				this.subscribeToArea();
+			else this.subscribeToSegment();	
+		},
+		unsubscribe : function() {
+			if(this.segmentArea)
+				this.grid.unsubscribeSegmentArea(this.segment, this.segmentArea, this.item.id);
+			else this.segment.unsubscribe(this.item.id);
 		},
 		subscribeToArea : function() {
 			this.subscribedSegments = this.grid.subscribeSegmentArea(
@@ -79,6 +92,9 @@ define('item', function() {
 				this.areaSegmentOnChange.bind(this)
 			);	
 		},
+		subscribeToSegment : function() {
+			this.getSegment().subscribe(this.item.id, this.areaSegmentOnChange.bind(this));	
+		},
 		getSubscribedSegments : function() {
 			var segs = [];
 			for(var i = 0; i < this.subscribedSegments.length; i++)
@@ -87,7 +103,7 @@ define('item', function() {
 		},
 		areaSegmentOnChange : function(event, item, segment) {
 			if(this.item.areaSegmentOnChange)
-				this.item.areaSegmentOnChange.call(this.item, event, item, segment);
+				this.item.areaSegmentOnChange(event, item, segment);
 		},
 		getCurrentSegmentCoords : function() {
 			var segment = this.getSegment();
@@ -100,6 +116,14 @@ define('item', function() {
 				this.item.y < this.segment.y + this.segment.h)	
 				return true;
 		},
+		collide : function(item) {
+			var self = this;
+			this.hit = true;
+			clearTimeout(this.clearHit);
+			this.clearHit = setTimeout(function() {
+				self.hit = false;
+			}, 500);
+		},
 		client : function() {
 			return {
 				x : this.item.x,
@@ -107,7 +131,8 @@ define('item', function() {
 				w : this.item.w,
 				h : this.item.h,
 				id : this.item.id,
-				dir : this.item.dir
+				angle : this.item.angle,
+				hit : this.hit
 			}
 		}
 	}

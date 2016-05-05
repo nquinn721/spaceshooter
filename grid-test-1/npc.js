@@ -1,5 +1,5 @@
-function NPC(grid, x, y, w, h, num) {
-	this.grid = grid;
+function NPC(manager, x, y, w, h, num) {
+	this.grid = manager.grid;
 	this.x = x;
 	this.y = y;
 	this.w = w;
@@ -10,7 +10,7 @@ function NPC(grid, x, y, w, h, num) {
 	this.vy = 5;
 
 	this.frames = 0;
-	this.item = grid.createItem(this);
+	this.item = manager.createItem(this);
 }
 
 NPC.prototype = {

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Test1 Grid Loader</title>
+	<style>
+	canvas{
+		border:1px solid black;
+		background:black;
+	}
+	html,body{
+		padding: 0;
+		margin: 0;
+		height: 100%;
+	}
+	.header{
+		height: 5%;
+		margin-bottom: 2%;
+	}
+	.fullscreen {
+	    position: absolute;
+	    right: 5%;
+	    margin-right: -1px;
+	    background: #999;
+	    padding: 10px;
+	    color: white;
+	    cursor: pointer;	
+	}
+	.none{
+		display: none;
+	}
+	canvas#minimap {
+	    position: absolute;
+	    bottom: 2%;
+	    right: 5%;
+	    background: #999;
+	    margin-right: -2px;
+	}
+	</style>
+	<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+</head>
+<body>
+<div class="header">
+	
+</div>
+<img src="img/player.png" class="none" alt="" id="player">
+<div class="game-container" id="game-container">
+	<i class="fa fa-arrows fullscreen" title="fullscreen"></i>
+	<canvas id="game">
+	</canvas>
+	
+</div>
+
+<script src="js/lib/createjs.js"></script>
+<script src="js/fullscreen.js"></script>
+<script src="js/starfield.js"></script>
+<script src="js/player.js"></script>
+<script src="js/minimap.js"></script>
+<script src="js/stage.js"></script>
+<script src="js/manager.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+var io = io.connect();
+
+var manager = new Manager('game');
+
+	setCanvasSize();
+
+manager.initClass(Starfield);
+manager.initClass(MiniMap);
+io.on('player', function(player) {
+	manager.init(player);
+});
+io.on('items', function(i) {
+	manager.setItems(i);
+});
+
+
+
+
+
+
+</script>
+</body>
+</html>

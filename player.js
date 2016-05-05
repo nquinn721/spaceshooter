@@ -26,6 +26,13 @@ Player.prototype = {
 		this.socket.emit('subscribed segments', this.item.getSubscribedSegments());
 		this.updateGridLocation();
 	},
+	addSpeed : function() {
+		console.log('add speed');
+		this.speed += 20;	
+	},
+	removeSpeed : function() {
+		this.speed -= 20;
+	},
 	shoot : function() {
 		var bullet = new Bullet(this.id, this.bullets.length, this.grid, this.gridNum, this.coords, this.facingDir);
 		bullet.init();
@@ -57,8 +64,8 @@ Player.prototype = {
 		if(this.movedir){
 			this.item.move(this);
 			this.updateGridLocation();
-			this.emitSegmentArea(io);
 		}
+			this.emitSegmentArea(io);
 	},
 	updateGridLocation : function() {
 		var gridCoords = this.item.getCurrentSegmentCoords();

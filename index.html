@@ -33,7 +33,7 @@
 		display: none;
 	}
 	</style>
-	<script src="js/jquery-2.2.3.min.js"></script>
+	<script src="js/lib/jquery-2.2.3.min.js"></script>
 </head>
 <body>
 <img src="img/stars2.jpg" alt="" id="background" class="none">
@@ -51,7 +51,6 @@
 	</div>
 </div>
 <script src="/socket.io/socket.io.js"></script>
-<script src="/js/particle.js"></script>
 <script>
 var io = io.connect(),
 	canvas = document.getElementById('space-fighter'),
@@ -83,9 +82,12 @@ io.on('grid', function(seg) {
 io.on('player', function(p) {
 	player = p;
 });
-// io.on('minimap', function(items) {
-// 	minimap = items;
-// });
+io.on('players', function(pl) {
+	players = pl;
+});
+io.on('minimap', function(items) {
+	minimap = items;
+});
 io.on('items', function(itemList) {
 	items = itemList;
 	showVisible();
@@ -107,9 +109,9 @@ io.on('connected sockets', function(sockets) {
 	connected = sockets;
 	showConnected();
 });
-io.on('subscribed segments', function(segments) {
-	subscribed = segments;
-});
+// io.on('subscribed segments', function(segments) {
+// 	subscribed = segments;
+// });
 
 function showVisible() {
 	$('.visible-sockets').html('');
@@ -165,6 +167,11 @@ $(document).on('keydown', function (e) {
 	
 	if(k === 32)
 		io.emit('shoot');
+
+	if(k === 219)
+		io.emit('remove speed');
+	if(k === 221)
+		io.emit('add speed');
 }).on('keyup', function() {
 	io.emit('stopmove');
 });
@@ -184,31 +191,39 @@ draw();
 var img = document.getElementById('background');
 var playerimg = document.getElementById('player');
 var enemyimg = document.getElementById('enemy');
-
+var facing = [180, 0, 90, -90];
 function drawGame() {
-	ctx.fillStyle = 'red';
 	if(player){
 		gameCtx.save();
 		gameCtx.translate(-player.x + (gameCanvas.width / 2), -player.y + (gameCanvas.height / 2));
 		drawBackground();
 		for(var i = 0; i < items.length; i++)
 			if(items[i].id !== player.id){
-				if(items[i].id && items[i].id.match('npc'))
-					gameCtx.drawImage(enemyimg, items[i].x, items[i].y, 50, 30);
-				else
+				if(items[i].id && items[i].id.match('npc')){
+					gameCtx.fillStyle = 'red';
+					gameCtx.fillText(items[i].id,items[i].x,items[i].y - 20);
+					// drawRotatedImage(enemyimg, items[i].x, items[i].y, facing[items[i].dir], 50, 30);
+					gameCtx.fillRect(items[i].x, items[i].y, 4, 4);
+				} else if(items[i].id){
+					gameCtx.fillText(items[i].id,items[i].x - 75,items[i].y - 75);
+					drawRotatedImage(playerimg, items[i].x, items[i].y, -90);
+				} else{
+					gameCtx.fillStyle = 'red';
 					gameCtx.fillRect(items[i].x, items[i].y, items[i].w, items[i].h);
+				}
 			}
 		gameCtx.restore();
+		gameCtx.fillStyle = 'white';
+		gameCtx.fillText(player.id,gameCanvas.width / 2 - 75,gameCanvas.height / 2 - 75);
 		drawRotatedImage(playerimg, gameCanvas.width / 2, gameCanvas.height / 2, playerRotation);
-		// gameCtx.fillRect(gameCanvas.width / 2, gameCanvas.height / 2, player.w, player.h);
 	}
 }
 var TO_RADIANS = Math.PI/180; 
-function drawRotatedImage(image, x, y, angle) { 
+function drawRotatedImage(image, x, y, angle, w, h) { 
 	gameCtx.save(); 
 	gameCtx.translate(x, y);
 	gameCtx.rotate(angle * TO_RADIANS);
-	gameCtx.drawImage(image, -(image.width/2 - 70), -(image.height/2 - 40), 140, 80);
+	gameCtx.drawImage(image, -(image.width/2 - (w ? w / 2 : 70)), -(image.height/2 - (h ? h / 2 : 40)), w || 140, h || 80);
 	gameCtx.restore(); 
 }
 function drawBackground() {
@@ -234,17 +249,17 @@ function drawMiniMap() {
 					);
 					
 				}else{
-					// ctx.fillRect(
-					// 	minimap[i].x / miniMapSizeW, 
-					// 	minimap[i].y / miniMapSizeH, 
-					// 	minimap[i].w / 40, 
-					// 	minimap[i].h / 40
-					// );
+					ctx.fillRect(
+						minimap[i].x / miniMapSizeW, 
+						minimap[i].y / miniMapSizeH, 
+						minimap[i].w / 40, 
+						minimap[i].h / 40
+					);
 				}
 				
 			}
 		}
-		
+		ctx.fillStyle = 'red';
 		ctx.fillRect(
 			player.x / miniMapSizeW, 
 			player.y / miniMapSizeH, 
@@ -271,10 +286,6 @@ function drawMiniMap() {
 }
 function drawSubscribed() {
 	if(subscribed){
-		if(!loggedSubscribed){
-			console.log(subscribed);
-			loggedSubscribed = true;
-		}
 		// ctx.fillStyle = 'rgba(243, 177, 255, 0.72)';
 		for(var i = 0; i < subscribed.length; i++){
 			ctx.fillRect(

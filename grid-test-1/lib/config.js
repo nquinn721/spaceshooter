@@ -4,8 +4,8 @@ var CONFIG = {
 		height : 900
 	},
 	gridSize : {
-		width : 50000,
-		height : 25000
+		width : 2400,
+		height : 1800
 	},
 	segmentAreas : {
 		'3x3SegmentArea' : [
