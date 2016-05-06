@@ -66,8 +66,6 @@ Manager.prototype = {
 			this.classes[i].draw && this.classes[i].draw(this.player);
 
 		if(this.items){
-			// this.stage.ctx.save();
-			// this.stage.ctx.translate(-this.player.player.x + (this.stage.canvas.width / 2), -this.player.player.y + (this.stage.canvas.height / 2));
 			this.stage.drawTranslated(function() {
 				for(var i = 0; i < self.items.length; i++){
 					self.drawWall(self.items[i]);
@@ -76,7 +74,6 @@ Manager.prototype = {
 				
 			});
 
-			// this.stage.ctx.restore();
 		}
 
 		for(var i = 0; i < this.classes.length; i++)
@@ -95,7 +92,7 @@ Manager.prototype = {
 	drawPlayer : function(item) {
 		var self = this;
 		if(item.id && item.id !== this.player.player.id){
-			this.stage.rotate(item.angle, item.x, item.y, item.w, item.h, function (x,y,w,h) {
+			this.stage.rotate(item.angle + 90, item.x, item.y, item.w, item.h, function (x,y,w,h) {
 				self.stage.ctx.drawImage(self.playerSprite, x, y,w,h);
 			});
 		}

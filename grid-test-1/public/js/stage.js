@@ -15,8 +15,8 @@ Stage.prototype = {
 		this.ctx.save();
 		this.ctx.translate(x + (w / 2), y + (h / 2));
 
-		this.ctx.rotate(angle * Math.PI / 180);
-
+		this.ctx.rotate(angle * (Math.PI / 180));
+		
 		if(cb)cb(-(w / 2), -(h / 2), w, h)
 		else this.ctx.fillRect(-(w / 2), -(h / 2), w, h);
 		this.ctx.restore();

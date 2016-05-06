@@ -3,7 +3,7 @@ var express = require('express'),
 	server = require('http').Server(app),
 	io = require('socket.io')(server),
 	util = require('util'),
-	port = 3000,
+	port = 8000,
 	_ = require('underscore');
 
 server.listen(port, function() {
@@ -69,9 +69,6 @@ io.on('connection', function(socket) {
 	socket.on('keyup', function(keyCode) {
 		socket.player.keyup(keyCode);
 	});
-	socket.on('rotate', function(dir) {
-		
-	});
 	socket.on('stopmove', function() {
 		socket.player.stopmove();
 	});
@@ -83,8 +80,6 @@ io.on('connection', function(socket) {
 setInterval(function() {
 	for(var i = 0, total = manager.players.length; i < total; i++)
 		manager.players[i].item.tick(io);
-	for(var i = 0, total = minimap.length; i < total; i++)
-		if(minimap[i].id)minimap.splice(i,1);
 
-	io.emit('minimap', minimap.concat(manager.getPlayersClient()));
+	io.emit('minimap', minimap, manager.getPlayersClient());
 }, 1000 / 60);
