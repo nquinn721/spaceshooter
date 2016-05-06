@@ -72,6 +72,9 @@ io.on('connection', function(socket) {
 	socket.on('stopmove', function() {
 		socket.player.stopmove();
 	});
+	socket.on('phone', function (e) {
+		console.log(e);
+	});
 
 	socket.on('disconnect', function() {
 		manager.removePlayer(socket.player);
