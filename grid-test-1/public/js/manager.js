@@ -21,6 +21,7 @@ Manager.prototype = {
 			this.setupEvents();
 			this.initClasses();
 			this.stage.initPlayer(this.player);
+			this.phone();
 		}else{
 			this.player.update(player);
 		}
