@@ -1,7 +1,7 @@
 function MiniMap(stage) {
 	this.stage = stage;
 	this.size = 9;
-	this.width = 268;
+	this.width = '30%';
 	this.height = 200;
 	this.items;
 
