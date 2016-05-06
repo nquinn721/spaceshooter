@@ -113,16 +113,19 @@ Manager.prototype = {
 		if (window.DeviceOrientationEvent) {
 		    window.addEventListener("deviceorientation", function (e) {
 		    	io.emit('phone');
+		    	$('.phone-coords').html(e);
 		        // tilt([event.beta, event.gamma]);
 		    }, true);
 		} else if (window.DeviceMotionEvent) {
 		    window.addEventListener('devicemotion', function (e) {
 		    	io.emit('phone', e);
+		    	$('.phone-coords').html(e);
 		        // tilt([event.acceleration.x * 2, event.acceleration.y * 2]);
 		    }, true);
 		} else {
 		    window.addEventListener("MozOrientation", function (e) {
 		    	io.emit('phone', e);
+		    	$('.phone-coords').html(e);
 		        // tilt([orientation.x * 50, orientation.y * 50]);
 		    }, true);
 		}

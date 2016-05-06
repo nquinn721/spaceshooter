@@ -82,7 +82,7 @@ io.on('connection', function(socket) {
 })
 setInterval(function() {
 	for(var i = 0, total = manager.players.length; i < total; i++)
-		manager.players[i].item.tick(io);
+		manager.players[i].item.tick && manager.players[i].item.tick(io);
 
 	io.emit('minimap', minimap, manager.getPlayersClient());
 }, 1000 / 60);
