@@ -3,7 +3,7 @@ var express = require('express'),
 	server = require('http').Server(app),
 	io = require('socket.io')(server),
 	util = require('util'),
-	port = 8000,
+	port = 3000,
 	_ = require('underscore');
 
 server.listen(port, function() {
