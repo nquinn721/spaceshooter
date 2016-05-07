@@ -1,9 +1,9 @@
 'use strict';
 
 
-define('grid', [
-		'segment',
-		'item'
+define('lib/grid', [
+		'lib/segment',
+		'lib/item'
 	], function(Segment, Item) {
 	
 	function Grid(config) {

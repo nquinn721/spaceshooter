@@ -1,8 +1,8 @@
 'use strict';
 
 
-define('manager', [
-		'grid'
+define('server/manager', [
+		'lib/grid'
 	], function(grid) {
 		
 	function Manager() {

@@ -10,6 +10,7 @@ server.listen(port, function() {
 	console.log('Listening on port', port);
 });
 app.use(express.static(__dirname + '/public'));
+app.use(express.static(__dirname + '/game'));
 
 app.get('/', function(req, res) {
 	res.sendFile(__dirname + '/index.html');
@@ -22,30 +23,26 @@ app.get('/webgl', function(req, res) {
 
 
 //Lib
-var Player = require('./player'),
-	config = require('./lib/config'),
-	Wall = require('./wall'),
-	requirejsConfig = require('./requirejs-config'),
-	manager = requirejs('manager')(config);
+var requirejsConfig = require('./requirejs-config'),
+	Player = requirejs('server/player'),
+	config = requirejs('lib/config'),
+	Wall = requirejs('server/wall'),
+	manager = requirejs('server/manager')(config);
 
 var players = [];
 var minimap = [];
 var wall;
 for(var i = 0; i < config.gridSize.height; i += config.segmentSize.height){
 	wall = new Wall(manager.grid, 0, i, config.segmentSize.height, 10);
-	minimap.push(wall.item.client());
 }
 for(var i = 0; i < config.gridSize.width; i += config.segmentSize.width){
 	wall = new Wall(manager.grid, i, 0, 10, config.segmentSize.width);
-	minimap.push(wall.item.client());
 }
 for(var i = 0; i < config.gridSize.height; i += config.segmentSize.height){
 	wall = new Wall(manager.grid, config.gridSize.width - 10, i, config.segmentSize.height, 10);
-	minimap.push(wall.item.client());
 }
 for(var i = 0; i < config.gridSize.width; i += config.segmentSize.width){
 	wall = new Wall(manager.grid, i, config.gridSize.height - 10, 10, config.segmentSize.width);
-	minimap.push(wall.item.client());
 }
 
 io.on('connection', function(socket) {
@@ -73,7 +70,7 @@ io.on('connection', function(socket) {
 		socket.player.stopmove();
 	});
 	socket.on('phone', function (e) {
-		console.log(e);
+		socket.player.phoneMove(e);
 	});
 
 	socket.on('disconnect', function() {

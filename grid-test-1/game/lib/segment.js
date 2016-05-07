@@ -1,6 +1,6 @@
 'use strict';
 
-define('segment', function() {
+define('lib/segment', function() {
 
 	function Segment(config) {
 		this.row = config.row;

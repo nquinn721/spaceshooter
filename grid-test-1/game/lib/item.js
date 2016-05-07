@@ -1,6 +1,6 @@
 'use strict';
 
-define('item', function() {
+define('lib/item', function() {
 	
 	function Item(grid, segmentArea, item, segment) {
 		this.grid = grid;
