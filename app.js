@@ -10,102 +10,79 @@ server.listen(port, function() {
 	console.log('Listening on port', port);
 });
 app.use(express.static(__dirname + '/public'));
+app.use(express.static(__dirname + '/game'));
 
 app.get('/', function(req, res) {
 	res.sendFile(__dirname + '/index.html');
 });
 
+app.get('/webgl', function(req, res) {
+	res.sendFile(__dirname + '/webgltest.html');
+});
+
 
 
 //Lib
-var Player = require('./player'),
-	Wall = require('./wall'),
-	NPC = require('./npc'),
-	config = require('./lib/config'),
-	requirejsConfig = require('./requirejs-config'),
-	grid = requirejs('grid')(config);
+var requirejsConfig = require('./requirejs-config');
+var World = requirejs('box2d/world'),
+	world = new World;
 
-var players = [];
-var clientPlayers = [];
-var minimap = [];
-var npcs = [];
-
+var	Player = requirejs('server/player'),
+	config = requirejs('grid/config'),
+	Wall = requirejs('server/wall'),
+	manager = requirejs('server/manager')(config);
+	
+world.init();
 var wall;
-for(var i = 0; i < config.gridSize.height; i += config.segmentSize.height){
-	wall = new Wall(grid, 0, i, config.segmentSize.height, 10);
-	minimap.push(wall.item.client());
-}
-for(var i = 0; i < config.gridSize.width; i += config.segmentSize.width){
-	wall = new Wall(grid, i, 0, 10, config.segmentSize.width);
-	minimap.push(wall.item.client());
-}
-for(var i = 0; i < config.gridSize.height; i += config.segmentSize.height){
-	wall = new Wall(grid, config.gridSize.width - 10, i, config.segmentSize.height, 10);
-	minimap.push(wall.item.client());
-}
-for(var i = 0; i < config.gridSize.width; i += config.segmentSize.width){
-	wall = new Wall(grid, i, config.gridSize.height - 10, 10, config.segmentSize.width);
-	minimap.push(wall.item.client());
-}
+// for(var i = 0; i < config.gridSize.height; i += config.segmentSize.height){
+// 	wall = new Wall(manager.grid, 0, i, config.segmentSize.height, 10);
+// }
+// for(var i = 0; i < config.gridSize.width; i += config.segmentSize.width){
+// 	wall = new Wall(manager.grid, i, 0, 10, config.segmentSize.width);
+// }
+// for(var i = 0; i < config.gridSize.height; i += config.segmentSize.height){
+// 	wall = new Wall(manager.grid, config.gridSize.width - 10, i, config.segmentSize.height, 10);
+// }
+// for(var i = 0; i < config.gridSize.width; i += config.segmentSize.width){
+// 	wall = new Wall(manager.grid, i, config.gridSize.height - 10, 10, config.segmentSize.width);
+// }
 
-var npc;
-for(var i = 0; i < 10000; i++){
-	npc = new NPC(grid, Math.random() * config.gridSize.width, Math.random() * config.gridSize.height, 10, 10, i);
-	// minimap.push(npc.item.client());
-	npcs.push(npc);
-}
 io.on('connection', function(socket) {
 	console.log("Socket connected", socket.id);
 
 	socket.emit('canvas', config.gridSize, config.segmentSize);
-	socket.emit('grid', grid.getAllSegmentsCoords());
 
 	// Create player and add to collection
-	socket.player = new Player(
+	socket.player = manager.createItem('player', new Player(
 		socket,
-		grid,
+		manager,
 		Math.random() * config.gridSize.width,
 		Math.random() * config.gridSize.height
-	);
-	minimap.push(socket.player.item.client());
+	));
+	console.log(socket.player.item.client());
 	socket.emit('player', socket.player.item.client());
-	players.push(socket.player);
 	socket.player.init(io);
-	// socket.emit('add item', wall.item.client());
-	clientPlayers.push(socket.player.item.client());
-	io.emit('connected sockets', clientPlayers);
-	io.emit('minimap', minimap);
 
-	socket.on('move', function(dir) {
-		socket.player.move(dir);
+	socket.on('keydown', function(keyCode) {
+		socket.player.keydown(keyCode);
 	});
-	socket.on('stopmove', function() {
-		socket.player.stopmove();
+	socket.on('keyup', function(keyCode) {
+		socket.player.keyup(keyCode);
 	});
-	socket.on('add speed', function() {
-		socket.player.addSpeed();
-	});
-	socket.on('remove speed', function () {
-		socket.player.removeSpeed();
-	});
-
-	// socket.on('shoot', function() {
-	// 	socket.player.shoot();
+	// socket.on('stopmove', function() {
+	// 	socket.player.stopmove();
+	// });
+	// socket.on('phone', function (e) {
+	// 	socket.player.phoneMove(e);
 	// });
 
 	socket.on('disconnect', function() {
-		// grid.removeItem(socket.player);
-		players.splice(players.indexOf(socket.player), 1);
-		io.emit('players', players);
+		manager.removePlayer(socket.player);
 	});
 })
-var frames = 0;
 setInterval(function() {
-	frames++;
-	for(var i = 0, total = players.length; i < total; i++)
-		players[i].tick(io);
-
-	for(var i = 0; i < npcs.length; i++)
-		npcs[i].tick();
-
+	manager.tick();
+	// io.emit('minimap', minimap, manager.getPlayersClient());
 }, 1000 / 60);
+
+

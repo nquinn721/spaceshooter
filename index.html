@@ -2,306 +2,68 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>Space Fighter</title>
+	<title>Test1 Grid Loader</title>
 	<style>
-	html, body{
-		margin: 0;
-		padding: 0;
+	#game{
+	    background: black;
+
 	}
 	canvas{
-		border:2px solid black;
-		box-sizing: border-box;
+		border: 1px solid black;
+	    position: absolute;
+	    top: 0%;
+	    width: 90%;
+	    margin-left: 5%;
+	    height: 95%;
+
 	}
-	canvas, .connected{
-		float: left;
+	html,body{
+		padding: 0;
+		margin: 0;
+		height: 100%;
 	}
-	.connected {
-		position: fixed;
-	    right: 0;
-	    max-height: 50%;
-	    background: #222;
+	#debug{
+	}
+	.header{
+		height: 5%;
+	}
+	.fullscreen {
+	    position: absolute;
+	    right: 5%;
+	    margin-right: -1px;
+	    background: #999;
+	    padding: 10px;
+	    z-index: 1;
 	    color: white;
-	    padding: 0 46px 20px 20px;
-	    overflow: auto;
+	    cursor: pointer;	
 	}
-	#space-fighter{
-		position: fixed;
-		bottom: 10px;
-		right: 10px;
+	.game-container{
+		width:100%;
+		height: 95%;
+		position: relative;
 	}
 	.none{
 		display: none;
 	}
 	</style>
-	<script src="js/lib/jquery-2.2.3.min.js"></script>
+	<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
 </head>
 <body>
-<div class="phone-coords"></div>
-<img src="img/stars2.jpg" alt="" id="background" class="none">
-<img src="img/player.png" alt="" id="player" class="none">
-<img src="img/enemy.png" alt="" id="enemy" class="none">
-<canvas id="actual-game" width="900" height="900"></canvas>
-<!-- <canvas id="c" width="900" height="900"></canvas> -->
-<canvas id="space-fighter" width="400" height="400"></canvas>
-<div class="connected">
-	<h3>Connected Sockets</h3>
-	<div class="sockets"></div>
-	<h3>Visible Players <span class="total"></span></h3>
-	<div class="visible-sockets">
-		
-	</div>
+<div class="header">
+	<div class="phone-started"></div>
+	<div class="phone-coords"></div>
+	
 </div>
-<script src="/socket.io/socket.io.js"></script>
-<script>
-var io = io.connect(),
-	canvas = document.getElementById('space-fighter'),
-	ctx = canvas.getContext('2d'),
-	gameCanvas = document.getElementById('actual-game'),
-	gameCtx = gameCanvas.getContext('2d');
-
-
-var items = [],
-	miniMapSizeW, miniMapSizeH, segments, subscribed, 
-	player, minimap, connected, grid;
-
+<img src="img/player.png" class="none" alt="" id="player">
+<div class="game-container" id="game-container">
+	<i class="fa fa-arrows fullscreen" title="fullscreen"></i>
+	<canvas id="game">
+	</canvas>
+	<canvas id="debug" width="1000px" height="600px"></canvas>
 	
-io.on('canvas', function(gridSize, segmentSize) {
-	grid = gridSize;
-	miniMapSizeW = (gridSize.width / segmentSize.width) * 3;
-	miniMapSizeH = (gridSize.height / segmentSize.height) * 3;
-	canvas.width = gridSize.width / miniMapSizeW;
-	canvas.height = gridSize.height / miniMapSizeH;
-	gameCanvas.width = segmentSize.width;
-	gameCanvas.height = segmentSize.height;
-});
-io.on('grid', function(seg) {
-	segments = seg;
-});
+</div>
 
-
-
-io.on('player', function(p) {
-	player = p;
-});
-io.on('players', function(pl) {
-	players = pl;
-});
-io.on('minimap', function(items) {
-	minimap = items;
-});
-io.on('items', function(itemList) {
-	items = itemList;
-	showVisible();
-});
-io.on('remove item', function(item) {
-	removeItem(item);
-	showVisible();
-});
-io.on('add item', function(item) {
-	items.push(item);
-	showVisible();
-});
-io.on('moved', function(item) {
-	if(item.id === player.id)
-		player = item;
-	replaceItem(item);
-});
-io.on('connected sockets', function(sockets) {
-	connected = sockets;
-	showConnected();
-});
-// io.on('subscribed segments', function(segments) {
-// 	subscribed = segments;
-// });
-
-function showVisible() {
-	$('.visible-sockets').html('');
-	$('.total').text(items.length);
-	for(var i = 0; i < items.length; i++)
-		$('.visible-sockets').append($('<div>', {text : items[i].id}));
-}
-function showConnected() {
-	$('.sockets').html('');
-	for(var i = 0; i < connected.length; i++)
-		$('.sockets').append($('<div>', {text : connected[i].id}));
-}
-function getItem(item) {
-	for(var i = 0; i < items.length; i++)
-		if(items[i].id === item.id)return item;
-}
-function replaceItem(item) {
-	var found;
-	for(var i = 0; i < items.length; i++)
-		if(items[i].id === item.id){
-			found = true;
-			items[i] = item;
-		}
-	if(!found)items.push(item);
-}
-function removeItem(item) {
-	for(var i = 0; i < items.length; i++)
-		if(items[i].id === item.id)items.splice(i,1);
-}
-var playerRotation;
-$(document).on('keydown', function (e) {
-	var k = e.keyCode;
-
-	if(k === 38){
-		io.emit('move', 'up');
-		playerRotation = -90;
-	}
-	
-	if(k === 40){
-		io.emit('move', 'down');
-		playerRotation = 90;	
-	}
-	
-	if(k === 37){
-		io.emit('move', 'left');
-		playerRotation = -180;
-	}
-	
-	if(k === 39){
-		io.emit('move', 'right');
-		playerRotation = 0;
-	}
-	
-	if(k === 32)
-		io.emit('shoot');
-
-	if(k === 219)
-		io.emit('remove speed');
-	if(k === 221)
-		io.emit('add speed');
-}).on('keyup', function() {
-	io.emit('stopmove');
-});
-var drawn;
-var logged;
-var loggedSubscribed;
-	
-function draw() {
-	ctx.clearRect(0,0,canvas.width,canvas.height);
-	gameCtx.clearRect(0,0,gameCanvas.width,gameCanvas.height);
-	drawGame();
-	drawMiniMap();
-	drawSubscribed();
-	requestAnimationFrame(draw);
-}
-draw();
-var img = document.getElementById('background');
-var playerimg = document.getElementById('player');
-var enemyimg = document.getElementById('enemy');
-var facing = [180, 0, 90, -90];
-function drawGame() {
-	if(player){
-		gameCtx.save();
-		gameCtx.translate(-player.x + (gameCanvas.width / 2), -player.y + (gameCanvas.height / 2));
-		drawBackground();
-		for(var i = 0; i < items.length; i++)
-			if(items[i].id !== player.id){
-				if(items[i].id && items[i].id.match('npc')){
-					gameCtx.fillStyle = 'red';
-					gameCtx.fillText(items[i].id,items[i].x,items[i].y - 20);
-					// drawRotatedImage(enemyimg, items[i].x, items[i].y, facing[items[i].dir], 50, 30);
-					gameCtx.fillRect(items[i].x, items[i].y, 4, 4);
-				} else if(items[i].id){
-					gameCtx.fillText(items[i].id,items[i].x - 75,items[i].y - 75);
-					drawRotatedImage(playerimg, items[i].x, items[i].y, -90);
-				} else{
-					gameCtx.fillStyle = 'red';
-					gameCtx.fillRect(items[i].x, items[i].y, items[i].w, items[i].h);
-				}
-			}
-		gameCtx.restore();
-		gameCtx.fillStyle = 'white';
-		gameCtx.fillText(player.id,gameCanvas.width / 2 - 75,gameCanvas.height / 2 - 75);
-		drawRotatedImage(playerimg, gameCanvas.width / 2, gameCanvas.height / 2, playerRotation);
-	}
-}
-var TO_RADIANS = Math.PI/180; 
-function drawRotatedImage(image, x, y, angle, w, h) { 
-	gameCtx.save(); 
-	gameCtx.translate(x, y);
-	gameCtx.rotate(angle * TO_RADIANS);
-	gameCtx.drawImage(image, -(image.width/2 - (w ? w / 2 : 70)), -(image.height/2 - (h ? h / 2 : 40)), w || 140, h || 80);
-	gameCtx.restore(); 
-}
-function drawBackground() {
-	gameCtx.save();
-	var pat = gameCtx.createPattern(img,"repeat");
-	gameCtx.rect( 0, 0, grid.width, grid.height);
-	gameCtx.fillStyle = pat;
-	gameCtx.fill();
-	gameCtx.restore();
-}
-
-function drawMiniMap() {
-	ctx.fillStyle = "black"; 
-	if(minimap){
-		for(var i = 0; i < minimap.length; i++){
-			if(minimap[i].id !== player.id){
-				if(minimap[i].id && !minimap[i].id.match('npc')){
-					ctx.fillRect(
-						minimap[i].x / miniMapSizeW, 
-						minimap[i].y / miniMapSizeH, 
-						minimap[i].w / 3, 
-						minimap[i].h / 3
-					);
-					
-				}else{
-					ctx.fillRect(
-						minimap[i].x / miniMapSizeW, 
-						minimap[i].y / miniMapSizeH, 
-						minimap[i].w / 40, 
-						minimap[i].h / 40
-					);
-				}
-				
-			}
-		}
-		ctx.fillStyle = 'red';
-		ctx.fillRect(
-			player.x / miniMapSizeW, 
-			player.y / miniMapSizeH, 
-			player.w / 3, 
-			player.h / 3
-		);
-
-	// 	// if(segments){
-	// 	// 	ctx.fillStyle = "#aaa"; 
-	// 	// 	ctx.strokeStyle = "#aaa"; 
-	// 	// 	for(var i = 0; i < segments.length; i++){
-	// 	// 		var x = segments[i].x / miniMapSizeW,
-	// 	// 			y = segments[i].y / miniMapSizeH,
-	// 	// 			w = segments[i].w / miniMapSizeW,
-	// 	// 			h = segments[i].h / miniMapSizeH;
-
-	// 	// 		ctx.rect(x, y, w, h);
-	// 	// 		ctx.fillText('[' + (y / h) + ',' + (x / w) + ']',x + (w / 2) - 15,y + (h / 2));
-	// 	// 	}
-	// 	// 	ctx.stroke();
-	// 	// }
-
-	}
-}
-function drawSubscribed() {
-	if(subscribed){
-		// ctx.fillStyle = 'rgba(243, 177, 255, 0.72)';
-		for(var i = 0; i < subscribed.length; i++){
-			ctx.fillRect(
-				subscribed[i].x / miniMapSizeW, 
-				subscribed[i].y / miniMapSizeH, 
-				subscribed[i].w / miniMapSizeW, 
-				subscribed[i].h / miniMapSizeH
-			);
-		}
-	}
-}
-
-
-window.requestAnimFrame=function(){return window.requestAnimationFrame||window.webkitRequestAnimationFrame||window.mozRequestAnimationFrame||window.oRequestAnimationFrame||window.msRequestAnimationFrame||function(a){window.setTimeout(a,1E3/60)}}();
-</script>
-
+<script data-main="main" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.js"></script>
 </body>
 </html>
